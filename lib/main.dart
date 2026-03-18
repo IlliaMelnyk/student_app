@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:student_app/features/auth/presentation/pages/login_screen.dart';
 import 'features/chatbot/presentation/chat_screen.dart';
-import '/theme/app_colors.dart';
+import 'features/reports/presentation/pages/reports_screen.dart';
+
+import 'theme/app_colors.dart';
 import 'l10n/generated/app_localizations.dart';
 
 void main() {
@@ -22,7 +25,7 @@ class StudentApp extends StatelessWidget {
         useMaterial3: true,
         scaffoldBackgroundColor: AppColors.background,
       ),
-      home: const MainScreen(),
+      home: const LoginScreen(),
     );
   }
 }
@@ -35,22 +38,24 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _currentIndex = 0;
-
-  final List<Widget> _screens = [
-    const Center(
-      child: Text('📰 Novinky', style: TextStyle(color: Colors.white)),
-    ),
-    const ChatScreen(),
-    const Center(
-      child: Text('📢 Komunita', style: TextStyle(color: Colors.white)),
-    ),
-  ];
+  int _currentIndex = 1;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final List<Widget> screens = [
+      Center(
+        child: Text(
+          '📰 ${l10n.news}',
+          style: const TextStyle(color: Colors.white),
+        ),
+      ),
+      const ChatScreen(),
+      const ReportsScreen(),
+    ];
+
     return Scaffold(
-      body: _screens[_currentIndex],
+      body: screens[_currentIndex],
 
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: AppColors.navbarBackground,
@@ -69,18 +74,21 @@ class _MainScreenState extends State<MainScreen> {
           fontWeight: FontWeight.w500,
         ),
         onTap: (index) => setState(() => _currentIndex = index),
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined),
-            activeIcon: Icon(Icons.calendar_today),
-            label: 'Novinky',
+            icon: const Icon(Icons.calendar_today_outlined),
+            activeIcon: const Icon(Icons.calendar_today),
+            label: l10n.news,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.smart_toy_outlined),
-            activeIcon: Icon(Icons.smart_toy),
-            label: 'AI Agent',
+            icon: const Icon(Icons.smart_toy_outlined),
+            activeIcon: const Icon(Icons.smart_toy),
+            label: l10n.aiAgent,
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Hlášení'),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.history),
+            label: l10n.reports,
+          ),
         ],
       ),
     );
