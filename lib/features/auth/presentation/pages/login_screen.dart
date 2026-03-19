@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:student_app/features/auth/presentation/pages/registration_flow_screen.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../main.dart';
 import '../../../../theme/app_colors.dart';
+import '../viewmodels/login_viewmodel.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,13 +14,9 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  // Ponecháváme controllery pro správu textového vstupu z klávesnice
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _isPasswordVisible = false;
-
-  bool _emailHasError = false;
-  bool _passwordHasError = false;
-  bool _showGeneralError = false;
 
   @override
   void dispose() {
@@ -27,12 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  bool _isValidEmail(String email) {
-    return RegExp(
-      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
-    ).hasMatch(email);
-  }
-
+  // Dekorace zůstává, protože se týká čistě vykreslování UI
   InputDecoration _buildInputDecoration({
     required String labelText,
     required bool hasError,
@@ -72,8 +65,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Inicializace lokalizace
     final l10n = AppLocalizations.of(context)!;
+    final viewModel = context.watch<AuthViewModel>();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -99,7 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      l10n.loginWelcomeText, // Nahrazeno lokalizací
+                      l10n.loginWelcomeText,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: Colors.white,
@@ -140,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           onPressed: () => Navigator.pop(context),
                         ),
                         Text(
-                          l10n.loginTitle, // Nahrazeno lokalizací
+                          l10n.loginTitle,
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -157,9 +150,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (_showGeneralError) ...[
+                            if (viewModel.errorMessage != null) ...[
                               Text(
-                                l10n.loginGeneralErrorMessage,
+                                viewModel.errorMessage!,
                                 style: const TextStyle(
                                   color: Colors.red,
                                   fontSize: 14,
@@ -171,31 +164,33 @@ class _LoginScreenState extends State<LoginScreen> {
                             TextField(
                               controller: _emailController,
                               keyboardType: TextInputType.emailAddress,
+                              // Čteme chybu přímo z ViewModelu (chyba je true, když je nastaven errorMessage)
                               decoration: _buildInputDecoration(
                                 labelText: l10n.email,
-                                hasError: _emailHasError,
+                                hasError:
+                                    viewModel.errorMessage != null &&
+                                    _emailController.text.isEmpty,
                               ),
                             ),
                             const SizedBox(height: 16),
 
                             TextField(
                               controller: _passwordController,
-                              obscureText: !_isPasswordVisible,
+                              obscureText: !viewModel.isPasswordVisible,
                               decoration: _buildInputDecoration(
                                 labelText: l10n.password,
-                                hasError: _passwordHasError,
+                                hasError:
+                                    viewModel.errorMessage != null &&
+                                    _passwordController.text.isEmpty,
                                 suffixIcon: IconButton(
                                   icon: Icon(
-                                    _isPasswordVisible
+                                    viewModel.isPasswordVisible
                                         ? Icons.visibility
                                         : Icons.visibility_off,
                                     color: Colors.grey,
                                   ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _isPasswordVisible = !_isPasswordVisible;
-                                    });
-                                  },
+                                  onPressed: () =>
+                                      viewModel.togglePasswordVisibility(),
                                 ),
                               ),
                             ),
@@ -231,7 +226,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             InkWell(
                               onTap: () {
-                                print("Navigate to Registration Screen");
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -256,58 +250,50 @@ class _LoginScreenState extends State<LoginScreen> {
                           width: double.infinity,
                           height: 54,
                           child: ElevatedButton(
-                            onPressed: () {
-                              final email = _emailController.text.trim();
-                              final password = _passwordController.text.trim();
+                            onPressed: viewModel.state == AuthState.loading
+                                ? null
+                                : () async {
+                                    final email = _emailController.text.trim();
+                                    final password = _passwordController.text
+                                        .trim();
 
-                              setState(() {
-                                _emailHasError = false;
-                                _passwordHasError = false;
-                                _showGeneralError = false;
-                              });
+                                    final success = await viewModel.login(
+                                      email: email,
+                                      password: password,
+                                      emptyFieldsText:
+                                          l10n.loginGeneralErrorMessage,
+                                      serverErrorText: l10n.communicationError,
+                                    );
 
-                              bool localValidationError = false;
-
-                              if (!_isValidEmail(email)) {
-                                setState(() => _emailHasError = true);
-                                localValidationError = true;
-                              }
-                              if (password.isEmpty) {
-                                setState(() => _passwordHasError = true);
-                                localValidationError = true;
-                              }
-
-                              if (localValidationError) {
-                                setState(() => _showGeneralError = true);
-                                print("Local validation failed");
-                                return;
-                              }
-
-                              print(
-                                "Local validation passed. Ready for backend API call.",
-                              );
-
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const MainScreen(),
-                                ),
-                              );
-                            },
+                                    if (success && mounted) {
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const MainScreen(),
+                                        ),
+                                      );
+                                    }
+                                  },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(24),
                               ),
                             ),
-                            child: Text(
-                              l10n.continueButton,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                            // Zobrazí se text, nebo načítací kolečko
+                            child: viewModel.state == AuthState.loading
+                                ? const CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
+                                : Text(
+                                    l10n.continueButton,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                           ),
                         ),
                       ],

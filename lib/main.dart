@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:student_app/features/auth/presentation/pages/login_screen.dart';
 import 'features/chatbot/presentation/chat_screen.dart';
 import 'features/reports/presentation/pages/reports_screen.dart';
-
+import 'injection_container.dart';
 import 'theme/app_colors.dart';
 import 'l10n/generated/app_localizations.dart';
+import 'package:provider/provider.dart';
 
-void main() {
-  runApp(const StudentApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final providers = await initDependencies();
+  runApp(MultiProvider(providers: providers, child: const StudentApp()));
 }
 
 class StudentApp extends StatelessWidget {

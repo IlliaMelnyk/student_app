@@ -38,5 +38,6 @@
   "slovakia": "Slovenská republika",
   "selectUniversity": "Vyber univerzitu",
   "registration": "Registrace",
-  "finishRegistration": "Dokončit registraci"
+  "finishRegistration": "Dokončit registraci",
+  "communicationError": "Chyba komunikace se serverem."
 }
