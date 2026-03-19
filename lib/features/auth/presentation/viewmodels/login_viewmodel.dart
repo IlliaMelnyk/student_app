@@ -15,6 +15,27 @@ class AuthViewModel extends ChangeNotifier {
   String? errorMessage;
   bool isPasswordVisible = false;
 
+  bool isCheckingAuth = true;
+  bool isAuthenticated = false;
+
+  Future<void> checkAuthStatus() async {
+    isCheckingAuth = true;
+    notifyListeners();
+
+    final token = await secureStorage.getToken();
+
+    if (token != null && token.isNotEmpty) {
+      isAuthenticated = true;
+      print("Token nájdený, preskakujem login!");
+    } else {
+      isAuthenticated = false;
+      print("Žiadny token, ideme na login.");
+    }
+
+    isCheckingAuth = false;
+    notifyListeners();
+  }
+
   void togglePasswordVisibility() {
     isPasswordVisible = !isPasswordVisible;
     notifyListeners();
@@ -52,5 +73,11 @@ class AuthViewModel extends ChangeNotifier {
       notifyListeners();
       return false;
     }
+  }
+
+  Future<void> logout() async {
+    await secureStorage.deleteToken();
+    isAuthenticated = false;
+    notifyListeners();
   }
 }

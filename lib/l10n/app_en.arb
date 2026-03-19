@@ -38,5 +38,7 @@
   "slovakia": "Slovakia",
   "selectUniversity": "Select university",
   "registration": "Registration",
-  "finishRegistration": "Complete registration"
+  "finishRegistration": "Complete registration",
+  "communicationError": "Error communication with server.",
+  "continuee": "Continue"
 }

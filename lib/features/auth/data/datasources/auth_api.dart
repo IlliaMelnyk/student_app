@@ -1,19 +1,18 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:student_app/core/utils/api_constants.dart';
 import '../models/auth_token_model.dart';
 
 class AuthApi {
-  final String _authUrl =
-      'https://auth.citymind.tech/realms/citymind/protocol/openid-connect/token/';
-
   Future<AuthTokenModel> login(String username, String password) async {
     final response = await http.post(
-      Uri.parse(_authUrl),
+      Uri.parse(ApiConstants.loginEndpoint),
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: {
         'grant_type': 'password',
         'username': username,
         'password': password,
+        'client_id': 'manager',
       },
     );
 

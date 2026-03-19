@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../theme/app_colors.dart';
-import '../data/chat_service.dart'; // Import Service
-import '../data/chat_request_model.dart'; // Import Model
+import 'package:provider/provider.dart';
+import '../../../../theme/app_colors.dart';
+import '../viewmodels/chatbot_viewmodel.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -12,95 +12,9 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _textController = TextEditingController();
-  final ScrollController _scrollController =
-      ScrollController(); // Pro automatické scrollování dolů
-
-  // Instance naší služby
-  final ChatService _chatService = ChatService();
-
-  // Unikátní ID konverzace (vygenerujeme si ho při startu)
-  final int _conversationId = DateTime.now().millisecondsSinceEpoch;
-
-  // Seznam zpráv (teď už bude dynamický!)
-  final List<Map<String, dynamic>> _messages = [
-    // Úvodní zpráva od AI (volitelné)
-    {
-      "isUser": false,
-      "text":
-          "Ahoj! Jsem Tessa, tvůj AI průvodce studiem na MENDELU. S čím ti mohu pomoci?",
-    },
-  ];
-
-  // Stav: Zda se zrovna generuje odpověď (abychom zablokovali tlačítko)
-  bool _isLoading = false;
-
-  // --- HLAVNÍ FUNKCE PRO ODESLÁNÍ ---
-  void _sendMessage() async {
-    final text = _textController.text.trim();
-    if (text.isEmpty) return;
-
-    // 1. Přidáme zprávu uživatele do seznamu a smažeme pole
-    setState(() {
-      _messages.add({"isUser": true, "text": text});
-      _isLoading = true; // Zapneme načítání
-    });
-    _textController.clear();
-    _scrollToBottom(); // Sjedeme dolů
-
-    // 2. Připravíme prázdnou bublinu pro AI (do které budeme připisovat text)
-    setState(() {
-      _messages.add({"isUser": false, "text": ""}); // Zatím prázdný text
-    });
-
-    // 3. Vytvoříme data pro server (Model)
-    // Potřebujeme historii otázek a odpovědí pro kontext
-    List<String> questions = _messages
-        .where((m) => m['isUser'] == true)
-        .map((m) => m['text'] as String)
-        .toList();
-
-    List<String> answers = _messages
-        .where(
-          (m) => m['isUser'] == false && m['text'] != "",
-        ) // Vynecháme tu aktuální prázdnou
-        .map((m) => m['text'] as String)
-        .toList();
-
-    final request = ChatRequestModel(
-      msg: text,
-      questions: questions,
-      answers: answers,
-      conversationId: _conversationId,
-    );
-
-    // 4. Spustíme STREAMING (To je ta magie!)
-    try {
-      // Posloucháme proud dat...
-      await for (String chunk in _chatService.streamResponse(request)) {
-        setState(() {
-          // Najdeme poslední zprávu (tu naši prázdnou bublinu) a přilepíme k ní další kousek textu
-          final lastIndex = _messages.length - 1;
-          _messages[lastIndex]['text'] = _messages[lastIndex]['text'] + chunk;
-        });
-        _scrollToBottom(); // Při každém písmenku posuneme chat dolů
-      }
-    } catch (e) {
-      // Kdyby se něco pokazilo
-      setState(() {
-        final lastIndex = _messages.length - 1;
-        _messages[lastIndex]['text'] =
-            "Omlouvám se, došlo k chybě připojení: $e";
-      });
-    } finally {
-      // Ať už to dopadne jakkoliv, vypneme načítání
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
+  final ScrollController _scrollController = ScrollController();
 
   void _scrollToBottom() {
-    // Počkáme chvilku, než se UI překreslí, a pak sjedeme dolů
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
@@ -113,7 +27,18 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   @override
+  void dispose() {
+    _textController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final viewModel = context.watch<ChatbotViewModel>();
+
+    _scrollToBottom();
+
     return Scaffold(
       backgroundColor: AppColors.background,
 
@@ -129,23 +54,18 @@ class _ChatScreenState extends State<ChatScreen> {
           'assets/images/logo.png',
           height: 24,
           fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) =>
+              const Icon(Icons.image, color: AppColors.primary),
         ),
         centerTitle: true,
         actions: [
-          // Tlačítko pro reset (vyčistí chat)
           IconButton(
             icon: const Icon(
               Icons.edit_square,
               color: AppColors.textDarkPurple,
             ),
             onPressed: () {
-              setState(() {
-                _messages.clear(); // Smaže zprávy
-                _messages.add({
-                  "isUser": false,
-                  "text": "Chat byl resetován. Jak mohu pomoci?",
-                });
-              });
+              viewModel.resetChat();
             },
           ),
         ],
@@ -156,12 +76,12 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           Expanded(
             child: ListView.builder(
-              controller: _scrollController, // Připojíme scroll controller
+              controller: _scrollController,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-              itemCount: _messages.length,
+              itemCount: viewModel.messages.length,
               itemBuilder: (context, index) {
-                final msg = _messages[index];
-                final isUser = msg['isUser'];
+                final msg = viewModel.messages[index];
+                final isUser = msg.isUser;
 
                 return Align(
                   alignment: isUser
@@ -190,8 +110,8 @@ class _ChatScreenState extends State<ChatScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (!isUser)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 4.0),
+                          const Padding(
+                            padding: EdgeInsets.only(bottom: 4.0),
                             child: Text(
                               "AI",
                               style: TextStyle(
@@ -202,7 +122,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             ),
                           ),
                         Text(
-                          msg['text'],
+                          msg.text,
                           style: TextStyle(
                             color: isUser
                                 ? AppColors.white
@@ -219,7 +139,6 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
 
-          // --- VSTUPNÍ POLE ---
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
             child: Container(
@@ -237,11 +156,13 @@ class _ChatScreenState extends State<ChatScreen> {
               child: TextField(
                 controller: _textController,
                 style: const TextStyle(color: AppColors.textDarkPurple),
-                // Pokud zrovna načítáme, zakážeme psaní (volitelné)
-                enabled: !_isLoading,
-                onSubmitted: (_) => _sendMessage(), // Odeslání Enterem
+                enabled: !viewModel.isLoading,
+                onSubmitted: (text) {
+                  viewModel.sendMessage(text);
+                  _textController.clear();
+                },
                 decoration: InputDecoration(
-                  hintText: _isLoading
+                  hintText: viewModel.isLoading
                       ? "Čekám na odpověď..."
                       : "Zeptej se mě...",
                   hintStyle: TextStyle(
@@ -252,19 +173,20 @@ class _ChatScreenState extends State<ChatScreen> {
                     horizontal: 20,
                     vertical: 14,
                   ),
-
-                  // Ikonka odeslání místo mikrofonu
                   suffixIcon: IconButton(
-                    icon: _isLoading
+                    icon: viewModel.isLoading
                         ? const SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
-                          ) // Točící kolečko
+                          )
                         : const Icon(Icons.send, color: AppColors.primary),
-                    onPressed: _isLoading
+                    onPressed: viewModel.isLoading
                         ? null
-                        : _sendMessage, // Po kliknutí odešle
+                        : () {
+                            viewModel.sendMessage(_textController.text);
+                            _textController.clear();
+                          },
                   ),
                 ),
               ),

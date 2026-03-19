@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:student_app/features/auth/presentation/pages/login_screen.dart';
-import 'features/chatbot/presentation/chat_screen.dart';
+import 'features/chatbot/presentation/pages/chat_screen.dart';
 import 'features/reports/presentation/pages/reports_screen.dart';
 import 'injection_container.dart';
 import 'theme/app_colors.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
+import 'features/auth/presentation/pages/auth_wrapper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,7 +28,7 @@ class StudentApp extends StatelessWidget {
         useMaterial3: true,
         scaffoldBackgroundColor: AppColors.background,
       ),
-      home: const LoginScreen(),
+      home: const AuthWrapper(),
     );
   }
 }

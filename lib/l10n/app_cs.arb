@@ -39,5 +39,6 @@
   "selectUniversity": "Vyber univerzitu",
   "registration": "Registrace",
   "finishRegistration": "Dokončit registraci",
-  "communicationError": "Chyba komunikace se serverem."
+  "communicationError": "Chyba komunikace se serverem.",
+  "continuee": "Pokračovat"
 }
