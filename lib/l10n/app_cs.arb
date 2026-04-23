@@ -40,5 +40,10 @@
   "registration": "Registrace",
   "finishRegistration": "Dokončit registraci",
   "communicationError": "Chyba komunikace se serverem.",
-  "continuee": "Pokračovat"
+  "continuee": "Pokračovat",
+  "statusNew": "Čeká na odpověď",
+  "statusInProgress": "V procesu",
+  "statusSolved": "Vyřešeno",
+  "statusHidden": "Skryto",
+  "back": "Zpět"
 }

@@ -1,5 +1,11 @@
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
+import 'package:student_app/features/news/data/datasources/news_api.dart';
+import 'package:student_app/features/news/data/repositories/news_repository_impl.dart';
+import 'package:student_app/features/news/presentation/viewmodels/news_viewmodel.dart';
+import 'package:student_app/features/reports/data/datasources/reports_api.dart';
+import 'package:student_app/features/reports/data/repositories/reports_repository_impl.dart';
+import 'package:student_app/features/reports/presentation/viewmodels/reports_viewmodel.dart';
 
 import 'core/utils/secure_storage_service.dart';
 import 'features/auth/data/datasources/auth_api.dart';
@@ -19,6 +25,12 @@ Future<List<SingleChildWidget>> initDependencies() async {
   final chatbotApi = ChatbotApi();
   final chatbotRepository = ChatbotRepositoryImpl(api: chatbotApi);
 
+  final reportsApi = ReportsApi();
+  final reportsRepository = ReportsRepositoryImpl(api: reportsApi);
+
+  final newsApi = NewsApi();
+  final newsRepository = NewsRepositoryImpl(api: newsApi);
+
   return [
     ChangeNotifierProvider(
       create: (_) => AuthViewModel(
@@ -28,6 +40,12 @@ Future<List<SingleChildWidget>> initDependencies() async {
     ),
     ChangeNotifierProvider(
       create: (_) => ChatbotViewModel(repository: chatbotRepository),
+    ),
+    ChangeNotifierProvider(
+      create: (_) => ReportsViewModel(repository: reportsRepository),
+    ),
+    ChangeNotifierProvider(
+      create: (_) => NewsViewModel(repository: newsRepository),
     ),
   ];
 }

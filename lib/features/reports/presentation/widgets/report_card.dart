@@ -1,26 +1,19 @@
 import 'package:flutter/material.dart';
-import '../../../../../theme/app_colors.dart';
+import 'package:provider/provider.dart';
+import '../../../../theme/app_colors.dart';
+import '../../data/models/report_model.dart';
+import '../viewmodels/reports_viewmodel.dart';
 
 class ReportCard extends StatelessWidget {
-  final String title;
-  final String description;
-  final String date;
-  final String building;
+  final ReportModel report;
   final String statusText;
   final Color statusColor;
-  final String rating;
-  final String comments;
 
   const ReportCard({
     super.key,
-    required this.title,
-    required this.description,
-    required this.date,
-    required this.building,
+    required this.report,
     required this.statusText,
     required this.statusColor,
-    required this.rating,
-    required this.comments,
   });
 
   @override
@@ -28,11 +21,9 @@ class ReportCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // --- HLAVIČKA ---
           Row(
             children: [
               const CircleAvatar(
@@ -44,9 +35,9 @@ class ReportCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    "Eliška Borýsková", // Změněno podle Figmy :)
-                    style: TextStyle(
+                  Text(
+                    report.authorName,
+                    style: const TextStyle(
                       color: AppColors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
@@ -54,19 +45,16 @@ class ReportCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    "$date • $building",
+                    "${report.dateAdded.day}. ${report.dateAdded.month}. ${report.dateAdded.year} • ${report.place}",
                     style: const TextStyle(color: Colors.grey, fontSize: 12),
                   ),
                 ],
               ),
             ],
           ),
-
           const SizedBox(height: 12),
-
-          // --- TĚLO ---
           Text(
-            title,
+            report.title,
             style: const TextStyle(
               color: AppColors.white,
               fontWeight: FontWeight.bold,
@@ -75,7 +63,7 @@ class ReportCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            description,
+            report.description,
             style: const TextStyle(
               color: AppColors.white,
               fontSize: 14,
@@ -84,37 +72,43 @@ class ReportCard extends StatelessWidget {
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
           ),
-
           const SizedBox(height: 16),
-
           Row(
-            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  _buildStatPill(rating, Icons.star_border),
-                  const SizedBox(width: 8),
-                  _buildStatPill(comments, Icons.chat_bubble_outline),
-                ],
+              InkWell(
+                onTap: () {
+                  context.read<ReportsViewModel>().toggleUpvote(report.id);
+                },
+                borderRadius: BorderRadius.circular(20),
+                child: _buildStatPill(
+                  report.upvoteCount.toString(),
+                  report.isUpvoted
+                      ? Icons.thumb_up
+                      : Icons.thumb_up_alt_outlined,
+                  isActive: report.isUpvoted,
+                ),
               ),
-
               const SizedBox(width: 8),
-              // Status Pilulka (plná barva, tmavý text)
+              _buildStatPill(
+                report.commentCount.toString(),
+                Icons.chat_bubble_outline,
+              ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16, // Trochu víc místa do stran podle Figmy
+                  horizontal: 16,
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: statusColor, // Plná barva bez průhlednosti
+                  color: statusColor,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   statusText,
                   style: const TextStyle(
-                    color: AppColors.textOnWhite, // Černý/tmavý text
+                    color: AppColors.textOnWhite,
                     fontWeight: FontWeight.w600,
-                    fontSize: 13, // Trošku zvětšeno
+                    fontSize: 13,
                   ),
                 ),
               ),
@@ -125,15 +119,13 @@ class ReportCard extends StatelessWidget {
     );
   }
 
-  // Pomocná metoda pro vykreslení těch malých pilulek s hvězdičkou a bublinou
-  Widget _buildStatPill(String text, IconData icon) {
+  Widget _buildStatPill(String text, IconData icon, {bool isActive = false}) {
+    final color = isActive ? AppColors.primary : AppColors.textOnWhite;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.white,
-        border: Border.all(
-          color: AppColors.textOnWhite.withOpacity(0.1),
-        ), // Lehký rámeček
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -141,14 +133,14 @@ class ReportCard extends StatelessWidget {
         children: [
           Text(
             text,
-            style: const TextStyle(
-              color: AppColors.textOnWhite,
+            style: TextStyle(
+              color: color,
               fontWeight: FontWeight.w600,
               fontSize: 14,
             ),
           ),
           const SizedBox(width: 4),
-          Icon(icon, size: 18, color: AppColors.textOnWhite),
+          Icon(icon, size: 18, color: color),
         ],
       ),
     );

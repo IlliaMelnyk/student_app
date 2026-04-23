@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:student_app/features/news/presentation/pages/news_screen.dart';
 import 'features/chatbot/presentation/pages/chat_screen.dart';
 import 'features/reports/presentation/pages/reports_screen.dart';
 import 'injection_container.dart';
@@ -47,12 +48,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final List<Widget> screens = [
-      Center(
-        child: Text(
-          '📰 ${l10n.news}',
-          style: const TextStyle(color: Colors.white),
-        ),
-      ),
+      const NewsScreen(),
       const ChatScreen(),
       const ReportsScreen(),
     ];

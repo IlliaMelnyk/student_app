@@ -1,9 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../l10n/generated/app_localizations.dart';
-import '../../data/reports_service.dart';
+import '../viewmodels/reports_viewmodel.dart';
 
 enum Severity { light, medium, heavy }
 
@@ -17,25 +18,22 @@ class NewReportScreen extends StatefulWidget {
 class _NewReportScreenState extends State<NewReportScreen> {
   final TextEditingController _problemController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
 
   Severity _selectedSeverity = Severity.light;
-
-  final ReportsService _reportsService = ReportsService();
-  bool _isSubmitting = false;
-
   File? _selectedImage;
   final ImagePicker _picker = ImagePicker();
+  bool _isLocalLoading = false;
 
   @override
   void dispose() {
     _problemController.dispose();
     _locationController.dispose();
+    _nameController.dispose();
     super.dispose();
   }
 
-  // Funkce pro výběr fotky z galerie
   Future<void> _pickImage() async {
-    // Můžeš změnit na ImageSource.camera, pokud chceš primárně foťák
     final XFile? pickedFile = await _picker.pickImage(
       source: ImageSource.gallery,
     );
@@ -49,8 +47,8 @@ class _NewReportScreenState extends State<NewReportScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Načtení překladů
     final l10n = AppLocalizations.of(context)!;
+    final viewModel = context.read<ReportsViewModel>();
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -88,89 +86,34 @@ class _NewReportScreenState extends State<NewReportScreen> {
           ),
         ),
       ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- 1. PŘIDAT FOTKU ---
-            InkWell(
-              onTap: _pickImage, // Spustí výběr fotky
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                width: double.infinity,
-                // Pokud je vybraná fotka, kontejner se jí přizpůsobí, jinak dáme pevnou výšku (vycpávku)
-                padding: _selectedImage == null
-                    ? const EdgeInsets.symmetric(vertical: 32)
-                    : null,
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey.shade300, width: 2),
-                ),
-                child: _selectedImage != null
-                    // A. Pokud MÁME fotku -> Zobrazíme ji s kulatými rohy
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(14),
-                        child: Image.file(
-                          _selectedImage!,
-                          fit: BoxFit.cover,
-                          height: 200, // Pevná výška náhledu
-                          width: double.infinity,
-                        ),
-                      )
-                    // B. Pokud NEMÁME fotku -> Zobrazíme tlačítko PLUS
-                    : Column(
-                        children: [
-                          const CircleAvatar(
-                            backgroundColor: AppColors.primary,
-                            radius: 20,
-                            child: Icon(Icons.add, color: AppColors.white),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            l10n.addPhoto,
-                            style: const TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            l10n.addPhotoHint,
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-              ),
-            ),
-
+            _buildPhotoPicker(l10n),
             const SizedBox(height: 32),
-
-            // --- 2. SPECIFIKACE PROBLÉMU ---
-            Text(
-              l10n.problemSpecification,
-              style: const TextStyle(
-                color: AppColors.textOnWhite,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
+            Text("Vaše jméno / E-mail", style: _labelStyle()),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _nameController,
+              decoration: _inputDecoration("Zadejte jméno nebo e-mail")
+                  .copyWith(
+                    prefixIcon: const Icon(
+                      Icons.person,
+                      color: AppColors.primary,
+                    ),
+                  ),
             ),
+            const SizedBox(height: 32),
+            Text(l10n.problemSpecification, style: _labelStyle()),
             const SizedBox(height: 12),
             TextField(
               controller: _problemController,
               maxLines: 4,
               decoration: _inputDecoration(l10n.problemHint),
             ),
-
             const SizedBox(height: 16),
-
-            // --- 3. LOKACE ---
             TextField(
               controller: _locationController,
               decoration: _inputDecoration(l10n.locationHint).copyWith(
@@ -180,102 +123,115 @@ class _NewReportScreenState extends State<NewReportScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 32),
-
-            // --- 4. ZÁVAŽNOST HLÁŠENÍ ---
-            Text(
-              l10n.severity,
-              style: const TextStyle(
-                color: AppColors.textOnWhite,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
+            Text(l10n.severity, style: _labelStyle()),
             const SizedBox(height: 8),
-            // Mapujeme texty na Enum hodnoty
             _buildRadioOption(l10n.severityLight, Severity.light),
             _buildRadioOption(l10n.severityMedium, Severity.medium),
             _buildRadioOption(l10n.severityHeavy, Severity.heavy),
-
             const SizedBox(height: 40),
-
-            SizedBox(
-              width: double.infinity,
-              height: 54,
-              child: ElevatedButton(
-                onPressed: _isSubmitting
-                    ? null
-                    : () async {
-                        if (_problemController.text.trim().isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Please enter a problem description.',
-                              ),
-                            ),
-                          );
-                          return;
-                        }
-
-                        setState(() {
-                          _isSubmitting = true;
-                        });
-
-                        bool success = await _reportsService.submitReport(
-                          title: _problemController.text.split('\n')[0],
-                          description: _problemController.text,
-                          email: "test@mendelu.cz",
-                        );
-
-                        setState(() {
-                          _isSubmitting = false;
-                        });
-
-                        if (success) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  ' Report submitted successfully!',
-                                ),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
-                            Navigator.of(context).pop();
-                          }
-                        } else {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Error submitting the report.'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        }
-                      },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 0,
-                ),
-                child: _isSubmitting
-                    ? const CircularProgressIndicator(color: AppColors.white)
-                    : Text(
-                        l10n.submit,
-                        style: const TextStyle(
-                          color: AppColors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-              ),
-            ),
+            _buildSubmitButton(viewModel, l10n),
           ],
         ),
+      ),
+    );
+  }
+
+  TextStyle _labelStyle() => const TextStyle(
+    color: AppColors.textOnWhite,
+    fontWeight: FontWeight.bold,
+    fontSize: 16,
+  );
+
+  Widget _buildPhotoPicker(AppLocalizations l10n) {
+    return InkWell(
+      onTap: _pickImage,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: double.infinity,
+        padding: _selectedImage == null
+            ? const EdgeInsets.symmetric(vertical: 32)
+            : null,
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade300, width: 2),
+        ),
+        child: _selectedImage != null
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: Image.file(
+                  _selectedImage!,
+                  fit: BoxFit.cover,
+                  height: 200,
+                  width: double.infinity,
+                ),
+              )
+            : Column(
+                children: [
+                  const CircleAvatar(
+                    backgroundColor: AppColors.primary,
+                    radius: 20,
+                    child: Icon(Icons.add, color: AppColors.white),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    l10n.addPhoto,
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.addPhotoHint,
+                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+
+  Widget _buildSubmitButton(ReportsViewModel viewModel, AppLocalizations l10n) {
+    return SizedBox(
+      width: double.infinity,
+      height: 54,
+      child: ElevatedButton(
+        onPressed: _isLocalLoading
+            ? null
+            : () async {
+                if (_problemController.text.trim().isEmpty) return;
+                setState(() => _isLocalLoading = true);
+                final author = _nameController.text.trim().isEmpty
+                    ? 'Anonymní'
+                    : _nameController.text.trim();
+                final success = await viewModel.addReport(
+                  _problemController.text.split('\n')[0],
+                  _problemController.text,
+                  _locationController.text,
+                  author,
+                );
+                setState(() => _isLocalLoading = false);
+                if (success && mounted) Navigator.of(context).pop();
+              },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        child: _isLocalLoading
+            ? const CircularProgressIndicator(color: AppColors.white)
+            : Text(
+                l10n.submit,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
       ),
     );
   }
@@ -298,31 +254,19 @@ class _NewReportScreenState extends State<NewReportScreen> {
     );
   }
 
-  // Upravená metoda pro přepínač, používá Enum pro logiku, ale překlad pro zobrazení
   Widget _buildRadioOption(String title, Severity value) {
     return InkWell(
-      onTap: () {
-        setState(() {
-          _selectedSeverity = value;
-        });
-      },
+      onTap: () => setState(() => _selectedSeverity = value),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: Row(
           children: [
-            SizedBox(
-              width: 24,
-              height: 24,
-              child: Radio<Severity>(
-                value: value,
-                groupValue: _selectedSeverity,
-                activeColor: AppColors.primary,
-                onChanged: (Severity? newValue) {
-                  setState(() {
-                    _selectedSeverity = newValue!;
-                  });
-                },
-              ),
+            Radio<Severity>(
+              value: value,
+              groupValue: _selectedSeverity,
+              activeColor: AppColors.primary,
+              onChanged: (Severity? newValue) =>
+                  setState(() => _selectedSeverity = newValue!),
             ),
             const SizedBox(width: 12),
             Text(

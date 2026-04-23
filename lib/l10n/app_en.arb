@@ -40,5 +40,10 @@
   "registration": "Registration",
   "finishRegistration": "Complete registration",
   "communicationError": "Error communication with server.",
-  "continuee": "Continue"
+  "continuee": "Continue",
+  "back": "Back",
+  "statusNew": "Waiting for response",
+  "statusInProgress": "In progress",
+  "statusSolved": "Solved",
+  "statusHidden": "Hidden"
 }
