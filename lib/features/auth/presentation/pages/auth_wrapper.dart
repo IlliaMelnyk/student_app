@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:student_app/features/auth/presentation/pages/welcome_screen.dart';
 import '../../../../main.dart';
 import '../viewmodels/login_viewmodel.dart';
-import 'login_screen.dart';
 
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});

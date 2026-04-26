@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:student_app/features/news/data/models/faculties_model.dart';
 import '../../../../core/utils/shared_prefs_service.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 
 class NewsSettingsScreen extends StatefulWidget {
   const NewsSettingsScreen({super.key});
@@ -59,6 +60,8 @@ class _NewsSettingsScreenState extends State<NewsSettingsScreen> {
       return;
     }
 
+    final l10n = AppLocalizations.of(context)!;
+
     final bool? shouldSave = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
@@ -67,27 +70,30 @@ class _NewsSettingsScreenState extends State<NewsSettingsScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: const Text(
-            "Neuložené změny",
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          title: Text(
+            l10n.unsavedChangesTitle,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          content: const Text(
-            "Máte neuložené změny ve filtrech. Chcete je aplikovat?",
-            style: TextStyle(color: Colors.white70),
+          content: Text(
+            l10n.unsavedChangesMessage,
+            style: const TextStyle(color: Colors.white70),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text(
-                "Zahodit",
-                style: TextStyle(color: Colors.grey),
+              child: Text(
+                l10n.discard,
+                style: const TextStyle(color: Colors.grey),
               ),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text(
-                "Aplikovat",
-                style: TextStyle(
+              child: Text(
+                l10n.apply,
+                style: const TextStyle(
                   color: Color(0xFF7B61FF),
                   fontWeight: FontWeight.bold,
                 ),
@@ -108,6 +114,7 @@ class _NewsSettingsScreenState extends State<NewsSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     const primaryColor = Color(0xFF7B61FF);
+    final l10n = AppLocalizations.of(context)!;
 
     return PopScope(
       canPop: false,
@@ -118,9 +125,12 @@ class _NewsSettingsScreenState extends State<NewsSettingsScreen> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           centerTitle: true,
-          title: const Text(
-            "Nastavení novinek",
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          title: Text(
+            l10n.newsSettings,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
@@ -134,9 +144,10 @@ class _NewsSettingsScreenState extends State<NewsSettingsScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
                   const SizedBox(height: 20),
-                  _buildHeader("Součásti"),
+
+                  _buildHeader(l10n.faculties),
                   _buildToggleAll(
-                    "Zvolit všechny",
+                    l10n.selectAll,
                     facultyOptions,
                     _selectedFacultyIds,
                   ),
@@ -148,9 +159,9 @@ class _NewsSettingsScreenState extends State<NewsSettingsScreen> {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  _buildHeader("Skupiny"),
+                  _buildHeader(l10n.groups),
                   _buildToggleAll(
-                    "Zvolit všechny",
+                    l10n.selectAll,
                     groupOptions,
                     _selectedGroupIds,
                   ),
@@ -165,7 +176,7 @@ class _NewsSettingsScreenState extends State<NewsSettingsScreen> {
                 ],
               ),
             ),
-            _buildSaveButton(),
+            _buildSaveButton(l10n),
           ],
         ),
       ),
@@ -243,7 +254,7 @@ class _NewsSettingsScreenState extends State<NewsSettingsScreen> {
     );
   }
 
-  Widget _buildSaveButton() {
+  Widget _buildSaveButton(AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
       child: ElevatedButton(
@@ -259,7 +270,7 @@ class _NewsSettingsScreenState extends State<NewsSettingsScreen> {
         ),
         onPressed: hasChanges ? _saveSettings : null,
         child: Text(
-          "Uložit filtry",
+          l10n.saveFilters,
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,

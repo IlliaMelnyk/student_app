@@ -38,6 +38,7 @@ class _NewsScreenState extends State<NewsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // 1. NAČTENÍ PŘEKLADŮ
     final l10n = AppLocalizations.of(context)!;
     final viewModel = context.watch<NewsViewModel>();
     final lang = Localizations.localeOf(context).languageCode;
@@ -71,10 +72,10 @@ class _NewsScreenState extends State<NewsScreen> {
                   color: AppColors.textDarkPurple,
                   fontSize: 16,
                 ),
-                decoration: const InputDecoration(
-                  hintText: "Hledat v novinkách...",
+                decoration: InputDecoration(
+                  hintText: l10n.searchInNews,
                   border: InputBorder.none,
-                  hintStyle: TextStyle(color: Colors.grey),
+                  hintStyle: const TextStyle(color: Colors.grey),
                 ),
                 onChanged: (val) => viewModel.filterNews(val),
               )
@@ -115,18 +116,18 @@ class _NewsScreenState extends State<NewsScreen> {
                         horizontal: 20,
                         vertical: 16,
                       ),
-                      content: const Row(
+                      content: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.check_circle,
                             color: AppColors.primary,
                             size: 28,
                           ),
-                          SizedBox(width: 12),
+                          const SizedBox(width: 12),
                           Text(
-                            "Changes were successfully saved",
-                            style: TextStyle(
+                            l10n.changesSaved,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16,
                               fontWeight: FontWeight.w600,

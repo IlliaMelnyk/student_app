@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:student_app/core/provider/locale_provider.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import 'login_screen.dart';
-import '../../../../l10n/generated/app_localizations.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -42,9 +43,44 @@ class WelcomeScreen extends StatelessWidget {
                 ),
               ),
 
-              const Text(
-                "CZ | EN",
-                style: TextStyle(color: Colors.white70, fontSize: 14),
+              InkWell(
+                onTap: () {
+                  context.read<LocaleProvider>().toggleLanguage();
+                },
+                child: Consumer<LocaleProvider>(
+                  builder: (context, localeProvider, child) {
+                    final isCs = localeProvider.locale.languageCode == 'cs';
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "CZ",
+                          style: TextStyle(
+                            color: isCs ? Colors.white : Colors.white38,
+                            fontWeight: isCs
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const Text(
+                          " | ",
+                          style: TextStyle(color: Colors.white54, fontSize: 16),
+                        ),
+                        Text(
+                          "EN",
+                          style: TextStyle(
+                            color: !isCs ? Colors.white : Colors.white38,
+                            fontWeight: !isCs
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ),
               const SizedBox(height: 24),
 

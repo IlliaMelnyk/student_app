@@ -14,7 +14,6 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // Ponecháváme controllery pro správu textového vstupu z klávesnice
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
@@ -25,7 +24,6 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // Dekorace zůstává, protože se týká čistě vykreslování UI
   InputDecoration _buildInputDecoration({
     required String labelText,
     required bool hasError,
@@ -164,7 +162,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             TextField(
                               controller: _emailController,
                               keyboardType: TextInputType.emailAddress,
-                              // Čteme chybu přímo z ViewModelu (chyba je true, když je nastaven errorMessage)
                               decoration: _buildInputDecoration(
                                 labelText: l10n.email,
                                 hasError:
@@ -281,7 +278,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                 borderRadius: BorderRadius.circular(24),
                               ),
                             ),
-                            // Zobrazí se text, nebo načítací kolečko
                             child: viewModel.state == AuthState.loading
                                 ? const CircularProgressIndicator(
                                     color: Colors.white,
@@ -294,6 +290,26 @@ class _LoginScreenState extends State<LoginScreen> {
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const MainScreen(),
+                              ),
+                            );
+                          },
+                          child: Text(
+                            l10n.continueAsGuest,
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
                       ],

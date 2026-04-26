@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../../../core/utils/secure_storage_service.dart';
@@ -26,14 +27,30 @@ class AuthViewModel extends ChangeNotifier {
 
     if (token != null && token.isNotEmpty) {
       isAuthenticated = true;
-      print("Token nájdený, preskakujem login!");
+      print("Citymind token nalezen, uživatel je přihlášen!");
     } else {
       isAuthenticated = false;
-      print("Žiadny token, ideme na login.");
+      print("Žádný token, uživatel je odhlášen.");
     }
 
     isCheckingAuth = false;
     notifyListeners();
+  }
+
+  String? _getNameFromToken(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return null;
+      final payload = parts[1];
+      final String decoded = utf8.decode(
+        base64Url.decode(base64Url.normalize(payload)),
+      );
+      final Map<String, dynamic> claims = json.decode(decoded);
+      return claims['name'];
+    } catch (e) {
+      print("Chyba dekódování jména: $e");
+      return null;
+    }
   }
 
   void togglePasswordVisibility() {
@@ -60,9 +77,17 @@ class AuthViewModel extends ChangeNotifier {
 
     try {
       final AuthTokenModel tokenModel = await repository.login(email, password);
-      await secureStorage.saveToken(tokenModel.accessToken);
-      print("MÁME TOKEN A JE ULOŽENÝ: ${tokenModel.accessToken}");
 
+      final realName = _getNameFromToken(tokenModel.accessToken) ?? "Student";
+
+      await secureStorage.saveTokens(
+        access: tokenModel.accessToken,
+        refresh: tokenModel.refreshToken,
+      );
+      await secureStorage.saveUserEmail(email);
+      await secureStorage.write('user_name', realName);
+
+      isAuthenticated = true;
       state = AuthState.success;
       notifyListeners();
       return true;
