@@ -5,7 +5,7 @@ class ApiConstants {
   // static const String reportsBaseUrl = 'http://localhost:1910';
   static const String chatbotUrl = 'https://api.citymind.tech/get';
   static const String communityBoardBaseUrl =
-      'https://api.citymind.tech/community-board';
+      'https://api.manager.citymind.tech/community-board';
   static const String publicReportsUrl =
       'https://api.citymind.tech/reporting/reports';
 

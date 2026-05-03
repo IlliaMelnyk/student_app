@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:student_app/core/provider/locale_provider.dart';
+import 'package:student_app/features/auth/presentation/pages/welcome_screen.dart';
+import 'package:student_app/l10n/generated/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../utils/secure_storage_service.dart';
-import '../../features/auth/presentation/pages/login_screen.dart';
 
 class AppSidebar extends StatefulWidget {
   const AppSidebar({super.key});
@@ -38,7 +41,7 @@ class _AppSidebarState extends State<AppSidebar> {
 
     if (mounted) {
       Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        MaterialPageRoute(builder: (context) => const WelcomeScreen()),
         (route) => false,
       );
     }
@@ -46,6 +49,7 @@ class _AppSidebarState extends State<AppSidebar> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Drawer(
       backgroundColor: Colors.white,
       child: Column(
@@ -109,11 +113,11 @@ class _AppSidebarState extends State<AppSidebar> {
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
                     child: Text(
-                      "Historie",
-                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                      l10n.history,
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
                     ),
                   ),
                   _buildHistoryItem("Zápis do semestru"),
@@ -130,6 +134,57 @@ class _AppSidebarState extends State<AppSidebar> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.language, color: Colors.grey),
+                  title: Text(
+                    l10n.language,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  trailing: Consumer<LocaleProvider>(
+                    builder: (context, localeProvider, child) {
+                      final isCs = localeProvider.locale.languageCode == 'cs';
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          InkWell(
+                            onTap: () =>
+                                localeProvider.setLocale(const Locale('cs')),
+                            child: Text(
+                              "CZ",
+                              style: TextStyle(
+                                fontWeight: isCs
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                                color: isCs ? AppColors.primary : Colors.grey,
+                              ),
+                            ),
+                          ),
+                          const Text(
+                            " / ",
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                          InkWell(
+                            onTap: () =>
+                                localeProvider.setLocale(const Locale('en')),
+                            child: Text(
+                              "EN",
+                              style: TextStyle(
+                                fontWeight: !isCs
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                                color: !isCs ? AppColors.primary : Colors.grey,
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
                 SizedBox(
                   width: double.infinity,
                   height: 48,
@@ -143,9 +198,9 @@ class _AppSidebarState extends State<AppSidebar> {
                         borderRadius: BorderRadius.circular(24),
                       ),
                     ),
-                    child: const Text(
-                      "Odhlásit se",
-                      style: TextStyle(
+                    child: Text(
+                      l10n.logout,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
@@ -160,7 +215,6 @@ class _AppSidebarState extends State<AppSidebar> {
     );
   }
 
-  // Pomocný widget pro položku v historii
   Widget _buildHistoryItem(String title) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 20),
