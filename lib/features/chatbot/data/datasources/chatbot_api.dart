@@ -2,12 +2,19 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/chat_request_model.dart';
 import '../../../../core/utils/api_constants.dart';
+import '../../../../core/utils/secure_storage_service.dart';
 
 class ChatbotApi {
-  Stream<String> streamResponse(ChatRequestModel requestBody) async* {
+  final SecureStorageService _storage = SecureStorageService();
+
+  Stream<Map<String, dynamic>> streamResponse(
+    ChatRequestModel requestBody,
+  ) async* {
     final client = http.Client();
     final request = http.Request('POST', Uri.parse(ApiConstants.chatbotUrl));
 
+    final token = await _storage.getToken();
+    request.headers['Authorization'] = 'Bearer $token';
     request.headers['Content-Type'] = 'application/json';
     request.headers['accept'] = 'application/json';
     request.body = requestBody.toJsonString();
@@ -26,19 +33,18 @@ class ChatbotApi {
             if (jsonString.isNotEmpty && jsonString != "[DONE]") {
               try {
                 final jsonData = jsonDecode(jsonString);
-                if (jsonData is Map<String, dynamic> &&
-                    jsonData.containsKey('response')) {
-                  yield jsonData['response'].toString();
+                if (jsonData is Map<String, dynamic>) {
+                  yield jsonData;
                 }
               } catch (_) {}
             }
           }
         }
       } else {
-        yield "Chyba serveru (${response.statusCode})";
+        yield {"error": "Chyba serveru (${response.statusCode})"};
       }
     } catch (e) {
-      yield "Chyba připojení: $e";
+      yield {"error": "Chyba připojení: $e"};
     } finally {
       client.close();
     }

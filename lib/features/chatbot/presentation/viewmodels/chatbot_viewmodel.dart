@@ -9,27 +9,29 @@ class ChatbotViewModel extends ChangeNotifier {
   ChatbotViewModel({required this.repository});
 
   final int _conversationId = DateTime.now().millisecondsSinceEpoch;
-  final List<ChatMessageModel> _messages = [
-    ChatMessageModel(
-      text:
-          "Ahoj! Jsem Tessa, tvůj AI průvodce studiem na MENDELU. S čím ti mohu pomoci?",
-      isUser: false,
-    ),
-  ];
+
+  final List<ChatMessageModel> _messages = [];
 
   bool _isLoading = false;
 
   List<ChatMessageModel> get messages => _messages;
   bool get isLoading => _isLoading;
 
-  void resetChat() {
+  void setInitialGreeting(String greetingText, List<String> faqs) {
+    if (_messages.isEmpty) {
+      _messages.add(
+        ChatMessageModel(text: greetingText, isUser: false, faqs: faqs),
+      );
+      Future.microtask(() => notifyListeners());
+    } else if (!_messages.first.isUser) {
+      _messages[0] = _messages[0].copyWith(text: greetingText, faqs: faqs);
+      Future.microtask(() => notifyListeners());
+    }
+  }
+
+  void resetChat(String resetMessage) {
     _messages.clear();
-    _messages.add(
-      ChatMessageModel(
-        text: "Chat byl resetován. Jak mohu pomoci?",
-        isUser: false,
-      ),
-    );
+    _messages.add(ChatMessageModel(text: resetMessage, isUser: false));
     notifyListeners();
   }
 
@@ -61,16 +63,60 @@ class ChatbotViewModel extends ChangeNotifier {
     );
 
     try {
-      await for (String chunk in repository.getChatStream(request)) {
-        final currentText = _messages[aiMessageIndex].text;
-        _messages[aiMessageIndex] = _messages[aiMessageIndex].copyWith(
-          text: currentText + chunk,
-        );
+      await for (Map<String, dynamic> event in repository.getChatStream(
+        request,
+      )) {
+        print("--- PŘIJATÝ EVENT Z BACKENDU ---");
+        print(event);
+        var currentMsg = _messages[aiMessageIndex];
+
+        if (event.containsKey('error')) {
+          _messages[aiMessageIndex] = currentMsg.copyWith(
+            text: currentMsg.text + event['error'].toString(),
+          );
+        } else if (event.containsKey('response')) {
+          _messages[aiMessageIndex] = currentMsg.copyWith(
+            text: currentMsg.text + event['response'].toString(),
+          );
+        } else if (event.containsKey('sources')) {
+          var sourcesData = event['sources'];
+          List<String> extractedUrls = [];
+
+          if (sourcesData is Map) {
+            sourcesData.forEach((domain, links) {
+              if (links is Iterable) {
+                for (var link in links) {
+                  if (link is Map && link.containsKey('url')) {
+                    extractedUrls.add(link['url'].toString());
+                  }
+                }
+              }
+            });
+          } else if (sourcesData is Iterable) {
+            extractedUrls = List<String>.from(
+              sourcesData.map((s) => s.toString()),
+            );
+          }
+
+          _messages[aiMessageIndex] = currentMsg.copyWith(
+            sources: extractedUrls,
+          );
+        } else if (event.containsKey('faq')) {
+          var faqData = event['faq'];
+          if (faqData is Iterable) {
+            _messages[aiMessageIndex] = currentMsg.copyWith(
+              faqs: List<String>.from(faqData),
+            );
+          } else if (faqData is Map) {
+            print("VAROVÁNÍ: API poslalo FAQ jako Map místo List!");
+          }
+        }
+
         notifyListeners();
       }
     } catch (e) {
       _messages[aiMessageIndex] = _messages[aiMessageIndex].copyWith(
-        text: "Chyba spojení: $e",
+        text: "Error: $e",
       );
     } finally {
       _isLoading = false;

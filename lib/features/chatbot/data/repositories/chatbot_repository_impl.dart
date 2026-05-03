@@ -8,7 +8,7 @@ class ChatbotRepositoryImpl implements ChatbotRepository {
   ChatbotRepositoryImpl({required this.api});
 
   @override
-  Stream<String> getChatStream(ChatRequestModel request) {
+  Stream<Map<String, dynamic>> getChatStream(ChatRequestModel request) {
     return api.streamResponse(request);
   }
 }
