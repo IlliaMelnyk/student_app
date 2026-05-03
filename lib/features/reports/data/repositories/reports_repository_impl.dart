@@ -11,12 +11,8 @@ class ReportsRepositoryImpl implements ReportsRepository {
   Future<List<ReportModel>> getAllReports() => api.fetchReports();
 
   @override
-  Future<bool> createReport(
-    String title,
-    String desc,
-    String place,
-    String authorName,
-  ) => api.sendReport(title, desc, place);
+  Future<bool> createReport(String title, String desc, String place) =>
+      api.sendReport(title, desc, place);
 
   @override
   Future<List<ReportAnswerModel>> getAnswers(int reportId) =>
@@ -29,4 +25,6 @@ class ReportsRepositoryImpl implements ReportsRepository {
 
   @override
   Future<bool> upvoteReport(int reportId) => api.upvoteReport(reportId);
+
+  Future<bool> unvoteReport(int reportId) => api.removeUpvote(reportId);
 }

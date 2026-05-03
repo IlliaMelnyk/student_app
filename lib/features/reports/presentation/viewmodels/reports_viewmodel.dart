@@ -49,18 +49,8 @@ class ReportsViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> addReport(
-    String title,
-    String desc,
-    String place,
-    String authorName,
-  ) async {
-    final success = await repository.createReport(
-      title,
-      desc,
-      place,
-      authorName,
-    );
+  Future<bool> addReport(String title, String desc, String place) async {
+    final success = await repository.createReport(title, desc, place);
     if (success) await loadReports();
     return success;
   }
@@ -94,27 +84,47 @@ class ReportsViewModel extends ChangeNotifier {
     if (index == -1) return;
 
     final report = _reports[index];
+    final bool wasUpvoted = report.isUpvoted;
+    final int oldUpvoteCount = report.upvoteCount;
 
-    if (report.isUpvoted) {
-      await _prefsService.removeUpvotedReportId(reportId);
-
+    if (wasUpvoted) {
       _reports[index] = report.copyWith(
-        upvoteCount: report.upvoteCount - 1,
+        upvoteCount: oldUpvoteCount > 0 ? oldUpvoteCount - 1 : 0,
         isUpvoted: false,
       );
-      notifyListeners();
+      await _prefsService.removeUpvotedReportId(reportId);
     } else {
-      final success = await repository.upvoteReport(reportId);
+      _reports[index] = report.copyWith(
+        upvoteCount: oldUpvoteCount + 1,
+        isUpvoted: true,
+      );
+      await _prefsService.saveUpvotedReportId(reportId);
+    }
+    notifyListeners();
 
-      if (success) {
-        await _prefsService.saveUpvotedReportId(reportId);
-
-        _reports[index] = report.copyWith(
-          upvoteCount: report.upvoteCount + 1,
-          isUpvoted: true,
-        );
-        notifyListeners();
+    bool success = false;
+    try {
+      if (wasUpvoted) {
+        success = await repository.unvoteReport(reportId);
+      } else {
+        success = await repository.upvoteReport(reportId);
       }
+    } catch (e) {
+      success = false;
+    }
+    if (!success) {
+      print("CHYBA: API upvote/unvote selhalo. Vracím UI zpět.");
+      _reports[index] = report.copyWith(
+        upvoteCount: oldUpvoteCount,
+        isUpvoted: wasUpvoted,
+      );
+
+      if (wasUpvoted) {
+        await _prefsService.saveUpvotedReportId(reportId);
+      } else {
+        await _prefsService.removeUpvotedReportId(reportId);
+      }
+      notifyListeners();
     }
   }
 }

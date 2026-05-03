@@ -9,6 +9,7 @@ import 'package:crypto/crypto.dart';
 
 class ReportsApi {
   final SecureStorageService _storage = SecureStorageService();
+  final int entityId = 1910;
 
   Future<Map<String, String>> _getHeaders() async {
     final token = await _storage.getToken();
@@ -19,7 +20,7 @@ class ReportsApi {
   }
 
   Future<List<ReportModel>> fetchReports() async {
-    final url = Uri.parse('${ApiConstants.communityBoardBaseUrl}/posts');
+    final url = Uri.parse('${ApiConstants.communityBoardBaseUrl}/$entityId');
     final headers = await _getHeaders();
     try {
       final response = await http.get(url, headers: headers);
@@ -50,9 +51,7 @@ class ReportsApi {
     String description,
     String place,
   ) async {
-    final url = Uri.parse(
-      '${ApiConstants.communityBoardBaseUrl}/api/submit-post',
-    );
+    final url = Uri.parse('${ApiConstants.communityBoardBaseUrl}/');
 
     final String authorEmail =
         await _storage.getUserEmail() ?? "neznamy@email.cz";
@@ -60,23 +59,29 @@ class ReportsApi {
         await _storage.read('user_name') ?? "Student MENDELU";
 
     final bodyData = {
-      "title": title,
-      "description": description,
-      "postType": "POST",
-      "place": place,
-      "authorName": authorName,
       "authorEmail": authorEmail,
+      "authorName": authorName,
+      "description": description,
       "entityId": 1910,
+      "place": place,
+      "postType": "POST",
+      "title": title,
     };
 
+    final bodyStr = jsonEncode(bodyData);
     var headers = await _getHeaders();
-    var response = await http.post(
-      url,
-      headers: headers,
-      body: jsonEncode(bodyData),
-    );
+
+    print("--- START SEND REPORT ---");
+    print("URL: $url");
+    print("BODY: $bodyStr");
+
+    var response = await http.post(url, headers: headers, body: bodyStr);
+
+    print("SEND REPORT STATUS CODE: ${response.statusCode}");
+    print("SEND REPORT RESPONSE: ${response.body}");
 
     if (response.statusCode == 401) {
+      print("SEND REPORT: 401 Token vypršel, zkouším refresh...");
       final refreshToken = await _storage.getRefreshToken();
       if (refreshToken != null) {
         final newTokens = await AuthApi().refreshCitymindToken(refreshToken);
@@ -88,28 +93,27 @@ class ReportsApi {
           );
 
           headers = await _getHeaders();
-          response = await http.post(
-            url,
-            headers: headers,
-            body: jsonEncode(bodyData),
-          );
+          response = await http.post(url, headers: headers, body: bodyStr);
+
+          print("RETRY SEND REPORT STATUS CODE: ${response.statusCode}");
+          print("RETRY SEND REPORT RESPONSE: ${response.body}");
         }
       }
     }
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
+    if (response.statusCode == 200 ||
+        response.statusCode == 201 ||
+        response.statusCode == 204) {
       return true;
     } else {
-      print('CHYBA ODESLÁNÍ: ${response.statusCode} - ${response.body}');
       return false;
     }
   }
 
   Future<List<ReportAnswerModel>> fetchAnswers(int reportId) async {
     final headers = await _getHeaders();
-    // ZMĚNA: GET /reports/{id}/answers -> /posts/{id}/answers
     final url = Uri.parse(
-      '${ApiConstants.communityBoardBaseUrl}/posts/$reportId/answers',
+      '${ApiConstants.communityBoardBaseUrl}/comments/$entityId/$reportId',
     );
 
     try {
@@ -130,9 +134,10 @@ class ReportsApi {
 
   Future<bool> submitReportAnswer(int reportId, String content) async {
     final headers = await _getHeaders();
-    // ZMĚNA: /create-report-answer -> /create-post-answer (odvozeno z logiky přejmenování)
+    final String authorName =
+        await _storage.read('user_name') ?? "Student MENDELU";
     final url = Uri.parse(
-      '${ApiConstants.communityBoardBaseUrl}/create-post-answer/1910',
+      '${ApiConstants.communityBoardBaseUrl}/create-comment/$entityId',
     );
     try {
       final response = await http.post(
@@ -142,6 +147,7 @@ class ReportsApi {
           "content": content,
           "postId": reportId,
           "createdAt": DateTime.now().toUtc().toIso8601String(),
+          "authorName": authorName,
         }),
       );
       return response.statusCode == 200 || response.statusCode == 201;
@@ -150,7 +156,7 @@ class ReportsApi {
     }
   }
 
-  Future<bool> upvoteReport(int reportId) async {
+  Future<bool> upvoteReport(int postId) async {
     final headers = await _getHeaders();
     final String userEmail = await _storage.getUserEmail() ?? "anonymous";
 
@@ -158,18 +164,43 @@ class ReportsApi {
     final digest = sha256.convert(bytes);
     final String hashedEmail = digest.toString();
 
-    final url = Uri.parse(
-      '${ApiConstants.communityBoardBaseUrl}/toggle-upvote',
-    );
+    final url = Uri.parse('${ApiConstants.communityBoardBaseUrl}/upvote');
 
     try {
       final response = await http.post(
         url,
         headers: headers,
-        body: jsonEncode({"postId": reportId, "upvoterEmailHash": hashedEmail}),
+        body: jsonEncode({"postId": postId, "upvoterEmailHash": hashedEmail}),
       );
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
+      print("Chyba při odesílání upvote: $e");
+      return false;
+    }
+  }
+
+  Future<bool> removeUpvote(int postId) async {
+    final headers = await _getHeaders();
+    final String userEmail = await _storage.getUserEmail() ?? "anonymous";
+
+    final bytes = utf8.encode(userEmail);
+    final digest = sha256.convert(bytes);
+    final String hashedEmail = digest.toString();
+
+    final url = Uri.parse('${ApiConstants.communityBoardBaseUrl}/upvote');
+
+    try {
+      final request = http.Request('DELETE', url)
+        ..headers.addAll(headers)
+        ..body = jsonEncode({
+          "postId": postId,
+          "upvoterEmailHash": hashedEmail,
+        });
+
+      final response = await http.Client().send(request);
+      return response.statusCode == 200 || response.statusCode == 204;
+    } catch (e) {
+      print("Chyba při mazání upvote: $e");
       return false;
     }
   }

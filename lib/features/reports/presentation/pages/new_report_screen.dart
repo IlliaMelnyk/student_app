@@ -6,8 +6,6 @@ import '../../../../theme/app_colors.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../viewmodels/reports_viewmodel.dart';
 
-enum Severity { light, medium, heavy }
-
 class NewReportScreen extends StatefulWidget {
   const NewReportScreen({super.key});
 
@@ -18,9 +16,7 @@ class NewReportScreen extends StatefulWidget {
 class _NewReportScreenState extends State<NewReportScreen> {
   final TextEditingController _problemController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
-  final TextEditingController _nameController = TextEditingController();
 
-  Severity _selectedSeverity = Severity.light;
   File? _selectedImage;
   final ImagePicker _picker = ImagePicker();
   bool _isLocalLoading = false;
@@ -29,7 +25,6 @@ class _NewReportScreenState extends State<NewReportScreen> {
   void dispose() {
     _problemController.dispose();
     _locationController.dispose();
-    _nameController.dispose();
     super.dispose();
   }
 
@@ -93,19 +88,6 @@ class _NewReportScreenState extends State<NewReportScreen> {
           children: [
             _buildPhotoPicker(l10n),
             const SizedBox(height: 32),
-            Text("Vaše jméno / E-mail", style: _labelStyle()),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _nameController,
-              decoration: _inputDecoration("Zadejte jméno nebo e-mail")
-                  .copyWith(
-                    prefixIcon: const Icon(
-                      Icons.person,
-                      color: AppColors.primary,
-                    ),
-                  ),
-            ),
-            const SizedBox(height: 32),
             Text(l10n.problemSpecification, style: _labelStyle()),
             const SizedBox(height: 12),
             TextField(
@@ -123,12 +105,6 @@ class _NewReportScreenState extends State<NewReportScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 32),
-            Text(l10n.severity, style: _labelStyle()),
-            const SizedBox(height: 8),
-            _buildRadioOption(l10n.severityLight, Severity.light),
-            _buildRadioOption(l10n.severityMedium, Severity.medium),
-            _buildRadioOption(l10n.severityHeavy, Severity.heavy),
             const SizedBox(height: 40),
             _buildSubmitButton(viewModel, l10n),
           ],
@@ -204,15 +180,14 @@ class _NewReportScreenState extends State<NewReportScreen> {
             : () async {
                 if (_problemController.text.trim().isEmpty) return;
                 setState(() => _isLocalLoading = true);
-                final author = _nameController.text.trim().isEmpty
-                    ? 'Anonymní'
-                    : _nameController.text.trim();
+
+                // ZMĚNA: Voláme metodu už jen se 3 parametry
                 final success = await viewModel.addReport(
-                  _problemController.text.split('\n')[0],
-                  _problemController.text,
-                  _locationController.text,
-                  author,
+                  _problemController.text.split('\n')[0], // Title
+                  _problemController.text, // Description
+                  _locationController.text, // Place
                 );
+
                 setState(() => _isLocalLoading = false);
                 if (success && mounted) Navigator.of(context).pop();
               },
@@ -251,34 +226,6 @@ class _NewReportScreenState extends State<NewReportScreen> {
         borderSide: const BorderSide(color: AppColors.primary, width: 2),
       ),
       contentPadding: const EdgeInsets.all(16),
-    );
-  }
-
-  Widget _buildRadioOption(String title, Severity value) {
-    return InkWell(
-      onTap: () => setState(() => _selectedSeverity = value),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
-        child: Row(
-          children: [
-            Radio<Severity>(
-              value: value,
-              groupValue: _selectedSeverity,
-              activeColor: AppColors.primary,
-              onChanged: (Severity? newValue) =>
-                  setState(() => _selectedSeverity = newValue!),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              title,
-              style: const TextStyle(
-                color: AppColors.textOnWhite,
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

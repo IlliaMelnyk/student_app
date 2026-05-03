@@ -81,9 +81,9 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
             ],
           ),
         ),
-        title: const Text(
-          "Detail hlášení",
-          style: TextStyle(
+        title: Text(
+          l10n.reportDetail,
+          style: const TextStyle(
             color: AppColors.white,
             fontWeight: FontWeight.bold,
             fontSize: 18,
@@ -118,7 +118,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _buildBadgesRow(viewModel, currentReport),
+                  _buildBadgesRow(viewModel, currentReport, l10n),
                   const SizedBox(height: 24),
                   Container(
                     height: 200,
@@ -144,9 +144,9 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                           ),
                   ),
                   const SizedBox(height: 32),
-                  const Text(
-                    "Komentáře",
-                    style: TextStyle(
+                  Text(
+                    l10n.comments,
+                    style: const TextStyle(
                       color: AppColors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -162,9 +162,11 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                       : Column(
                           children: viewModel.currentComments.isEmpty
                               ? [
-                                  const Text(
-                                    "Zatím žádné komentáře",
-                                    style: TextStyle(color: Colors.white54),
+                                  Text(
+                                    l10n.noCommentsYet,
+                                    style: const TextStyle(
+                                      color: Colors.white54,
+                                    ),
                                   ),
                                 ]
                               : viewModel.currentComments
@@ -177,7 +179,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
               ),
             ),
           ),
-          _buildCommentInputField(viewModel, currentReport),
+          _buildCommentInputField(viewModel, currentReport, l10n),
         ],
       ),
     );
@@ -202,17 +204,18 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     );
   }
 
-  Widget _buildBadgesRow(ReportsViewModel viewModel, ReportModel report) {
-    final l10n = AppLocalizations.of(context)!;
+  Widget _buildBadgesRow(
+    ReportsViewModel viewModel,
+    ReportModel report,
+    AppLocalizations l10n,
+  ) {
     final statusInfo = _getStatusInfo(report.status, l10n);
 
     return Row(
       children: [
         InkWell(
           onTap: () {
-            if (!report.isUpvoted) {
-              viewModel.toggleUpvote(report.id);
-            }
+            viewModel.toggleUpvote(report.id);
           },
           child: _buildBadge(
             report.isUpvoted ? Icons.thumb_up : Icons.thumb_up_alt_outlined,
@@ -313,6 +316,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   Widget _buildCommentInputField(
     ReportsViewModel viewModel,
     ReportModel report,
+    AppLocalizations l10n,
   ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -328,7 +332,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                 controller: _commentController,
                 style: const TextStyle(color: AppColors.white),
                 decoration: InputDecoration(
-                  hintText: "Přidejte komentář...",
+                  hintText: l10n.addCommentHint,
                   hintStyle: const TextStyle(color: Colors.white54),
                   filled: true,
                   fillColor: Colors.white.withOpacity(0.1),
