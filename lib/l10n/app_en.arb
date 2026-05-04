@@ -75,5 +75,6 @@
   "addCommentHint": "Add a comment...",
   "chatGreeting": "Hi! I'm Tessa, your AI study guide at MENDELU. How can I help you?",
   "chatFaq1": "When is the semester enrollment?",
-  "chatFaq2": "Where can I find the study department?"
+  "chatFaq2": "Where can I find the study department?",
+  "botThinking": "Thinking..."
 }

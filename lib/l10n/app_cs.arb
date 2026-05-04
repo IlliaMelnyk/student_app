@@ -75,5 +75,6 @@
   "addCommentHint": "Přidejte komentář...",
   "chatGreeting": "Ahoj! Jsem Tessa, tvůj AI průvodce studiem na MENDELU. S čím ti mohu pomoci?",
   "chatFaq1": "Kdy je zápis do semestru?",
-  "chatFaq2": "Kde najdu studijní oddělení?"
+  "chatFaq2": "Kde najdu studijní oddělení?",
+  "botThinking": "Přemýšlím..."
 }

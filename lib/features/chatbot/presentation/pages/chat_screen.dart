@@ -74,14 +74,11 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: AppColors.background,
-
       drawer: const AppSidebar(),
-
       appBar: CustomAppBar(
         showLogo: true,
         onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
       ),
-
       body: Column(
         children: [
           Expanded(
@@ -145,6 +142,20 @@ class _ChatScreenState extends State<ChatScreen> {
                                       height: 1.4,
                                     ),
                                   )
+                                : msg.text.isEmpty
+                                ? Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        l10n.botThinking,
+                                        style: TextStyle(
+                                          color: AppColors.textDarkPurple
+                                              .withOpacity(0.6),
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                    ],
+                                  )
                                 : MarkdownBody(
                                     data: msg.text,
                                     styleSheet: MarkdownStyleSheet(
@@ -162,7 +173,6 @@ class _ChatScreenState extends State<ChatScreen> {
                           ],
                         ),
                       ),
-
                       if (!isUser && msg.sources.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(
@@ -238,7 +248,6 @@ class _ChatScreenState extends State<ChatScreen> {
                             ],
                           ),
                         ),
-
                       if (!isUser && msg.faqs.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(
@@ -301,7 +310,6 @@ class _ChatScreenState extends State<ChatScreen> {
               },
             ),
           ),
-
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
             child: Container(
