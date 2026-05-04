@@ -6,6 +6,21 @@ class SecureStorageService {
   final String _tokenKey = 'auth_token';
   final String _refreshTokenKey = 'refresh_token';
   final String _emailKey = 'user_email';
+  final String _nameKey = 'user_name';
+
+  Future<void> saveUserName(String name) async {
+    await _storage.write(key: _nameKey, value: name);
+  }
+
+  Future<String?> getUserName() async {
+    return await _storage.read(key: _nameKey);
+  }
+
+  Future<void> clearUserData() async {
+    await deleteTokens();
+    await _storage.delete(key: _emailKey);
+    await _storage.delete(key: _nameKey);
+  }
 
   Future<void> saveTokens({
     required String access,

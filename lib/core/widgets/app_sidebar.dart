@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:student_app/core/provider/locale_provider.dart';
 import 'package:student_app/features/auth/presentation/pages/welcome_screen.dart';
+import 'package:student_app/features/reports/presentation/viewmodels/reports_viewmodel.dart';
 import 'package:student_app/l10n/generated/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../utils/secure_storage_service.dart';
@@ -36,8 +37,14 @@ class _AppSidebarState extends State<AppSidebar> {
   }
 
   Future<void> _logout() async {
+    if (mounted) {
+      context.read<ReportsViewModel>().clearData();
+    }
+
     await _storage.deleteTokens();
     await _storage.deleteToken();
+    await _storage.write('user_email', '');
+    await _storage.write('user_name', '');
 
     if (mounted) {
       Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
@@ -120,9 +127,6 @@ class _AppSidebarState extends State<AppSidebar> {
                       style: const TextStyle(color: Colors.grey, fontSize: 12),
                     ),
                   ),
-                  _buildHistoryItem("Zápis do semestru"),
-                  _buildHistoryItem("Menza Q otevírací doba"),
-                  _buildHistoryItem("Státnice okruhy"),
                 ],
               ),
             ),

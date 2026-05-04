@@ -33,29 +33,25 @@ class SharedPrefsService {
     return list?.map((e) => int.parse(e)).toList() ?? [];
   }
 
-  Future<void> saveUpvotedReportId(int reportId) async {
+  Future<List<int>> getUpvotedReportIds(String userEmail) async {
     final prefs = await SharedPreferences.getInstance();
-    List<String> upvoted = prefs.getStringList('upvoted_reports') ?? [];
+    final list = prefs.getStringList('upvotes_$userEmail') ?? [];
+    return list.map((e) => int.tryParse(e) ?? 0).toList();
+  }
 
-    if (!upvoted.contains(reportId.toString())) {
-      upvoted.add(reportId.toString());
-      await prefs.setStringList('upvoted_reports', upvoted);
+  Future<void> saveUpvotedReportId(int reportId, String userEmail) async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList('upvotes_$userEmail') ?? [];
+    if (!list.contains(reportId.toString())) {
+      list.add(reportId.toString());
+      await prefs.setStringList('upvotes_$userEmail', list);
     }
   }
 
-  Future<List<int>> getUpvotedReportIds() async {
+  Future<void> removeUpvotedReportId(int reportId, String userEmail) async {
     final prefs = await SharedPreferences.getInstance();
-    List<String> upvoted = prefs.getStringList('upvoted_reports') ?? [];
-    return upvoted.map((e) => int.parse(e)).toList();
-  }
-
-  Future<void> removeUpvotedReportId(int reportId) async {
-    final prefs = await SharedPreferences.getInstance();
-    List<String> upvoted = prefs.getStringList('upvoted_reports') ?? [];
-
-    if (upvoted.contains(reportId.toString())) {
-      upvoted.remove(reportId.toString());
-      await prefs.setStringList('upvoted_reports', upvoted);
-    }
+    final list = prefs.getStringList('upvotes_$userEmail') ?? [];
+    list.remove(reportId.toString());
+    await prefs.setStringList('upvotes_$userEmail', list);
   }
 }

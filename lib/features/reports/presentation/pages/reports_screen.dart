@@ -4,6 +4,7 @@ import '../../../../theme/app_colors.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../core/widgets/app_sidebar.dart';
+import '../../data/models/report_model.dart';
 import '../viewmodels/reports_viewmodel.dart';
 import '../widgets/report_card.dart';
 import './report_detail_screen.dart';
@@ -40,6 +41,53 @@ class _ReportsScreenState extends State<ReportsScreen> {
       default:
         return (statusCode, Colors.grey);
     }
+  }
+
+  Widget _buildReportList(
+    List<ReportModel> reportsList,
+    AppLocalizations l10n,
+    ReportsViewModel viewModel,
+  ) {
+    if (viewModel.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
+    }
+
+    if (reportsList.isEmpty) {
+      return const Center(
+        child: Text(
+          "Zatím žádná hlášení.",
+          style: TextStyle(color: Colors.white, fontSize: 16),
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => viewModel.loadReports(),
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: reportsList.length,
+        itemBuilder: (context, index) {
+          final report = reportsList[index];
+          final statusInfo = _getStatusInfo(report.status, l10n);
+
+          return InkWell(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ReportDetailScreen(report: report),
+              ),
+            ),
+            child: ReportCard(
+              report: report,
+              statusText: statusInfo.$1,
+              statusColor: statusInfo.$2,
+            ),
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -94,8 +142,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 indicatorWeight: 3,
                 indicatorSize: TabBarIndicatorSize.label,
                 tabs: [
-                  Tab(text: l10n.myReports),
                   Tab(text: l10n.allReports),
+                  Tab(text: l10n.myReports),
                 ],
               ),
             ),
@@ -103,42 +151,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
         ),
         body: TabBarView(
           children: [
-            viewModel.isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
-                  )
-                : RefreshIndicator(
-                    onRefresh: () => viewModel.loadReports(),
-                    child: ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: viewModel.reports.length,
-                      itemBuilder: (context, index) {
-                        final report = viewModel.reports[index];
-                        final statusInfo = _getStatusInfo(report.status, l10n);
-
-                        return InkWell(
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  ReportDetailScreen(report: report),
-                            ),
-                          ),
-                          child: ReportCard(
-                            report: report,
-                            statusText: statusInfo.$1,
-                            statusColor: statusInfo.$2,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-            Center(
-              child: Text(
-                l10n.allReports,
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
+            _buildReportList(viewModel.reports, l10n, viewModel),
+            _buildReportList(viewModel.myReports, l10n, viewModel),
           ],
         ),
       ),
