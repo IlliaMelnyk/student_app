@@ -69,7 +69,11 @@ class _ChatScreenState extends State<ChatScreen> {
     final l10n = AppLocalizations.of(context)!;
     final viewModel = context.watch<ChatbotViewModel>();
 
-    _scrollToBottom();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollToBottom();
+      }
+    });
 
     return Scaffold(
       key: _scaffoldKey,

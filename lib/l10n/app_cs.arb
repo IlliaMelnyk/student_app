@@ -76,5 +76,9 @@
   "chatGreeting": "Ahoj! Jsem Tessa, tvůj AI průvodce studiem na MENDELU. S čím ti mohu pomoci?",
   "chatFaq1": "Kdy je zápis do semestru?",
   "chatFaq2": "Kde najdu studijní oddělení?",
-  "botThinking": "Přemýšlím..."
+  "botThinking": "Přemýšlím...",
+  "mendelUniversity": "Mendelova univerzita",
+  "noreport": "Zatím žádná hlášení.",
+  "fillAllFields": "Prosím, vyplňte specifikaci problému i lokaci.",
+  "reportSendError": "Chyba při odesílání reportu. Zkuste to znovu."
 }

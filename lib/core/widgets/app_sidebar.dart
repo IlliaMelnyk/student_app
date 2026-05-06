@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:student_app/core/provider/locale_provider.dart';
 import 'package:student_app/features/auth/presentation/pages/welcome_screen.dart';
+import 'package:student_app/features/auth/presentation/viewmodels/login_viewmodel.dart';
+import 'package:student_app/features/news/presentation/viewmodels/news_viewmodel.dart';
 import 'package:student_app/features/reports/presentation/viewmodels/reports_viewmodel.dart';
 import 'package:student_app/l10n/generated/app_localizations.dart';
 import '../../theme/app_colors.dart';
@@ -37,14 +39,10 @@ class _AppSidebarState extends State<AppSidebar> {
   }
 
   Future<void> _logout() async {
-    if (mounted) {
-      context.read<ReportsViewModel>().clearData();
-    }
+    if (!mounted) return;
 
-    await _storage.deleteTokens();
-    await _storage.deleteToken();
-    await _storage.write('user_email', '');
-    await _storage.write('user_name', '');
+    context.read<ReportsViewModel>().clearData();
+    await context.read<AuthViewModel>().logout();
 
     if (mounted) {
       Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
@@ -152,8 +150,10 @@ class _AppSidebarState extends State<AppSidebar> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           InkWell(
-                            onTap: () =>
-                                localeProvider.setLocale(const Locale('cs')),
+                            onTap: () {
+                              localeProvider.setLocale(const Locale('cs'));
+                              context.read<NewsViewModel>().loadNews('cs');
+                            },
                             child: Text(
                               "CZ",
                               style: TextStyle(
@@ -168,9 +168,12 @@ class _AppSidebarState extends State<AppSidebar> {
                             " / ",
                             style: TextStyle(color: Colors.grey),
                           ),
+
                           InkWell(
-                            onTap: () =>
-                                localeProvider.setLocale(const Locale('en')),
+                            onTap: () {
+                              localeProvider.setLocale(const Locale('en'));
+                              context.read<NewsViewModel>().loadNews('en');
+                            },
                             child: Text(
                               "EN",
                               style: TextStyle(

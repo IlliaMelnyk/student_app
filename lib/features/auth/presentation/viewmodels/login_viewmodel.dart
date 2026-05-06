@@ -101,7 +101,7 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    await secureStorage.deleteToken();
+    await secureStorage.clearUserData();
     isAuthenticated = false;
     notifyListeners();
   }

@@ -86,8 +86,8 @@ class _NewReportScreenState extends State<NewReportScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildPhotoPicker(l10n),
-            const SizedBox(height: 32),
+            // _buildPhotoPicker(l10n),
+            //const SizedBox(height: 32),
             Text(l10n.problemSpecification, style: _labelStyle()),
             const SizedBox(height: 12),
             TextField(
@@ -178,18 +178,44 @@ class _NewReportScreenState extends State<NewReportScreen> {
         onPressed: _isLocalLoading
             ? null
             : () async {
-                if (_problemController.text.trim().isEmpty) return;
+                final problem = _problemController.text.trim();
+                final location = _locationController.text.trim();
+
+                if (problem.isEmpty || location.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.fillAllFields),
+                      backgroundColor: const Color.fromARGB(255, 203, 53, 42),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                  return;
+                }
+
                 setState(() => _isLocalLoading = true);
 
-                // ZMĚNA: Voláme metodu už jen se 3 parametry
+                final title = problem.split('\n')[0];
                 final success = await viewModel.addReport(
-                  _problemController.text.split('\n')[0], // Title
-                  _problemController.text, // Description
-                  _locationController.text, // Place
+                  title,
+                  problem,
+                  location,
                 );
 
                 setState(() => _isLocalLoading = false);
-                if (success && mounted) Navigator.of(context).pop();
+
+                if (success) {
+                  if (mounted) Navigator.of(context).pop();
+                } else {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(l10n.reportSendError),
+                        backgroundColor: Colors.red,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                }
               },
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,

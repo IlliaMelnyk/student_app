@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../theme/app_colors.dart';
@@ -55,10 +57,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
     }
 
     if (reportsList.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
-          "Zatím žádná hlášení.",
-          style: TextStyle(color: Colors.white, fontSize: 16),
+          l10n.noreport,
+          style: const TextStyle(color: Colors.white, fontSize: 16),
         ),
       );
     }
