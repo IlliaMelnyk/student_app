@@ -53,8 +53,12 @@ class ReportsApi {
   ) async {
     final url = Uri.parse('${ApiConstants.communityBoardBaseUrl}/');
 
-    final String authorEmail =
-        await _storage.getUserEmail() ?? "neznamy@email.cz";
+    String authorEmail = await _storage.getUserEmail() ?? "neznamy@email.cz";
+
+    if (!authorEmail.contains('@')) {
+      authorEmail = "test@mendelu.cz";
+    }
+
     final String authorName =
         await _storage.read('user_name') ?? "Student MENDELU";
 

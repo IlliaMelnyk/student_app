@@ -8,6 +8,8 @@ import '../../../../theme/app_colors.dart';
 import '../viewmodels/chatbot_viewmodel.dart';
 import '../../../../core/widgets/app_sidebar.dart';
 import '../../../../l10n/generated/app_localizations.dart';
+import 'package:student_app/features/auth/presentation/viewmodels/login_viewmodel.dart';
+import 'package:student_app/features/auth/presentation/pages/login_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -19,8 +21,9 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  int _previousMessageCount = 0;
 
   @override
   void dispose() {
@@ -32,9 +35,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
     final l10n = AppLocalizations.of(context)!;
-
     context.read<ChatbotViewModel>().setInitialGreeting(l10n.chatGreeting, [
       l10n.chatFaq1,
       l10n.chatFaq2,
@@ -68,12 +69,70 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final viewModel = context.watch<ChatbotViewModel>();
+    final authViewModel = context.watch<AuthViewModel>();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollToBottom();
-      }
-    });
+    if (!authViewModel.isAuthenticated) {
+      return Scaffold(
+        key: _scaffoldKey,
+        backgroundColor: AppColors.background,
+        drawer: const AppSidebar(),
+        appBar: CustomAppBar(
+          showLogo: true,
+          onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.lock_outline, size: 80, color: Colors.grey),
+                const SizedBox(height: 24),
+                Text(
+                  l10n.loginRequiredMessage,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white, fontSize: 18),
+                ),
+                const SizedBox(height: 32),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LoginScreen(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 12,
+                    ),
+                  ),
+                  child: Text(
+                    l10n.loginAction,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (viewModel.messages.length > _previousMessageCount) {
+      _previousMessageCount = viewModel.messages.length;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollToBottom();
+        }
+      });
+    }
 
     return Scaffold(
       key: _scaffoldKey,
