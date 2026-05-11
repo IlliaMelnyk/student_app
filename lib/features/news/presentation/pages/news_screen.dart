@@ -89,7 +89,7 @@ class _NewsScreenState extends State<NewsScreen> {
             ),
           IconButton(
             icon: const Icon(
-              Icons.settings_outlined,
+              Icons.filter_list,
               color: AppColors.textDarkPurple,
             ),
             onPressed: () {

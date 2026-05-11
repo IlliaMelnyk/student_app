@@ -8,7 +8,7 @@ class ChatbotViewModel extends ChangeNotifier {
 
   ChatbotViewModel({required this.repository});
 
-  final int _conversationId = DateTime.now().millisecondsSinceEpoch;
+  int _conversationId = DateTime.now().millisecondsSinceEpoch;
 
   final List<ChatMessageModel> _messages = [];
 
@@ -35,7 +35,15 @@ class ChatbotViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> sendMessage(String text) async {
+  String _currentLang = 'cs';
+
+  void updateLanguage(String newLang) {
+    _currentLang = newLang;
+    notifyListeners();
+  }
+
+  Future<void> sendMessage(String text, String languageCode) async {
+    _currentLang = languageCode;
     if (text.trim().isEmpty) return;
 
     _messages.add(ChatMessageModel(text: text, isUser: true));
@@ -60,6 +68,7 @@ class ChatbotViewModel extends ChangeNotifier {
       questions: questions,
       answers: answers,
       conversationId: _conversationId,
+      conversationLang: languageCode,
     );
 
     try {
@@ -122,5 +131,11 @@ class ChatbotViewModel extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  void clearEntireHistory() {
+    _messages.clear();
+    _conversationId = DateTime.now().millisecondsSinceEpoch;
+    notifyListeners();
   }
 }

@@ -260,7 +260,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                                 .text
                                                 .trim();
 
-                                            // Skrytí klávesnice po kliknutí na tlačítko (dobrá praxe)
                                             FocusScope.of(context).unfocus();
 
                                             final success = await viewModel

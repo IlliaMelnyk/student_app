@@ -48,7 +48,15 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _currentIndex = 0;
+  late int _currentIndex = 0;
+  @override
+  void initState() {
+    super.initState();
+    final authVM = context.read<AuthViewModel>();
+    _currentIndex = authVM.redirectIndex ?? 0;
+
+    authVM.setRedirectIndex(0);
+  }
 
   void _showLoginPrompt(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -126,9 +134,11 @@ class _MainScreenState extends State<MainScreen> {
           fontWeight: FontWeight.w500,
         ),
         onTap: (index) {
-          final isAuthenticated = context.read<AuthViewModel>().isAuthenticated;
+          final authVM = context.read<AuthViewModel>();
+          final isAuthenticated = authVM.isAuthenticated;
 
           if (!isAuthenticated && (index == 1 || index == 2)) {
+            authVM.setRedirectIndex(index);
             _showLoginPrompt(context);
           } else {
             setState(() => _currentIndex = index);

@@ -17,7 +17,7 @@ class ChatRequestModel {
     required this.answers,
     required this.conversationId,
     this.entityId = 1910,
-    this.conversationLang = "Czech",
+    required this.conversationLang,
     this.contextIds = const [null],
     this.additionalDatasets = const [],
     this.webConfig = const {},

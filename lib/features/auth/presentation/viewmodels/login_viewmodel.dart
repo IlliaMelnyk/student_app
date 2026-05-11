@@ -18,6 +18,8 @@ class AuthViewModel extends ChangeNotifier {
 
   bool isCheckingAuth = true;
   bool isAuthenticated = false;
+  int? _redirectIndex;
+  int? get redirectIndex => _redirectIndex;
 
   Future<void> checkAuthStatus() async {
     isCheckingAuth = true;
@@ -35,6 +37,10 @@ class AuthViewModel extends ChangeNotifier {
 
     isCheckingAuth = false;
     notifyListeners();
+  }
+
+  void setRedirectIndex(int? index) {
+    _redirectIndex = index;
   }
 
   String? _getNameFromToken(String token) {
@@ -102,6 +108,7 @@ class AuthViewModel extends ChangeNotifier {
 
   Future<void> logout() async {
     await secureStorage.clearUserData();
+    _redirectIndex = null;
     isAuthenticated = false;
     notifyListeners();
   }

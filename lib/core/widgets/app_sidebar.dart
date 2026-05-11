@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:student_app/core/provider/locale_provider.dart';
 import 'package:student_app/features/auth/presentation/pages/welcome_screen.dart';
 import 'package:student_app/features/auth/presentation/viewmodels/login_viewmodel.dart';
+import 'package:student_app/features/chatbot/presentation/viewmodels/chatbot_viewmodel.dart';
 import 'package:student_app/features/news/presentation/viewmodels/news_viewmodel.dart';
 import 'package:student_app/features/reports/presentation/viewmodels/reports_viewmodel.dart';
 import 'package:student_app/l10n/generated/app_localizations.dart';
@@ -42,6 +43,7 @@ class _AppSidebarState extends State<AppSidebar> {
     if (!mounted) return;
 
     context.read<ReportsViewModel>().clearData();
+    context.read<ChatbotViewModel>().clearEntireHistory();
     await context.read<AuthViewModel>().logout();
 
     if (mounted) {
@@ -153,6 +155,14 @@ class _AppSidebarState extends State<AppSidebar> {
                             onTap: () {
                               localeProvider.setLocale(const Locale('cs'));
                               context.read<NewsViewModel>().loadNews('cs');
+                              final chatbotVM = context
+                                  .read<ChatbotViewModel>();
+                              chatbotVM.updateLanguage('cs');
+                              final l10n = AppLocalizations.of(context)!;
+                              chatbotVM.setInitialGreeting(l10n.chatGreeting, [
+                                l10n.chatFaq1,
+                                l10n.chatFaq2,
+                              ]);
                             },
                             child: Text(
                               "CZ",
@@ -173,6 +183,14 @@ class _AppSidebarState extends State<AppSidebar> {
                             onTap: () {
                               localeProvider.setLocale(const Locale('en'));
                               context.read<NewsViewModel>().loadNews('en');
+                              final chatbotVM = context
+                                  .read<ChatbotViewModel>();
+                              chatbotVM.updateLanguage('en');
+                              final l10n = AppLocalizations.of(context)!;
+                              chatbotVM.setInitialGreeting(l10n.chatGreeting, [
+                                l10n.chatFaq1,
+                                l10n.chatFaq2,
+                              ]);
                             },
                             child: Text(
                               "EN",

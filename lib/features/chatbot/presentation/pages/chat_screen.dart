@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:student_app/core/provider/locale_provider.dart';
 import 'package:student_app/core/widgets/custom_app_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -330,7 +331,14 @@ class _ChatScreenState extends State<ChatScreen> {
                                       child: InkWell(
                                         onTap: () {
                                           if (!viewModel.isLoading) {
-                                            viewModel.sendMessage(faqText);
+                                            final langCode = context
+                                                .read<LocaleProvider>()
+                                                .locale
+                                                .languageCode;
+                                            viewModel.sendMessage(
+                                              faqText,
+                                              langCode,
+                                            );
                                           }
                                         },
                                         borderRadius: BorderRadius.circular(20),
@@ -393,7 +401,11 @@ class _ChatScreenState extends State<ChatScreen> {
                 style: const TextStyle(color: AppColors.textDarkPurple),
                 enabled: !viewModel.isLoading,
                 onSubmitted: (text) {
-                  viewModel.sendMessage(text);
+                  final langCode = context
+                      .read<LocaleProvider>()
+                      .locale
+                      .languageCode;
+                  viewModel.sendMessage(text, langCode);
                   _textController.clear();
                 },
                 decoration: InputDecoration(
@@ -419,7 +431,14 @@ class _ChatScreenState extends State<ChatScreen> {
                     onPressed: viewModel.isLoading
                         ? null
                         : () {
-                            viewModel.sendMessage(_textController.text);
+                            final langCode = context
+                                .read<LocaleProvider>()
+                                .locale
+                                .languageCode;
+                            viewModel.sendMessage(
+                              _textController.text,
+                              langCode,
+                            );
                             _textController.clear();
                           },
                   ),
