@@ -7,12 +7,18 @@ import '../../../../core/utils/secure_storage_service.dart';
 
 class ReportsViewModel extends ChangeNotifier {
   final ReportsRepository repository;
-  final SharedPrefsService _prefsService = SharedPrefsService();
-  final SecureStorageService _secureStorage = SecureStorageService();
+  final SharedPrefsService _prefsService;
+  final SecureStorageService _secureStorage;
 
-  ReportsViewModel({required this.repository});
+  ReportsViewModel({
+    required this.repository,
+    SharedPrefsService? prefsService,
+    SecureStorageService? secureStorage,
+  }) : _prefsService = prefsService ?? SharedPrefsService(),
+       _secureStorage = secureStorage ?? SecureStorageService();
 
   List<ReportModel> _reports = [];
+
   bool _isLoading = false;
 
   List<ReportAnswerModel> _currentComments = [];

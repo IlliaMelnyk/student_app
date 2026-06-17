@@ -5,9 +5,9 @@ import '../../data/models/news_model.dart';
 
 class NewsViewModel extends ChangeNotifier {
   final NewsRepository repository;
-  final SharedPrefsService _prefs = SharedPrefsService();
-
-  NewsViewModel({required this.repository});
+  final SharedPrefsService _prefs;
+  NewsViewModel({required this.repository, SharedPrefsService? prefs})
+    : _prefs = prefs ?? SharedPrefsService();
 
   List<NewsModel> _allFilteredNews = [];
   List<NewsModel> _displayNews = [];
