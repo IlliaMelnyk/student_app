@@ -122,10 +122,10 @@ class _AppSidebarState extends State<AppSidebar> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                    child: Text(
-                      l10n.history,
-                      style: const TextStyle(color: Colors.grey, fontSize: 12),
-                    ),
+                    // child: Text(
+                    //   l10n.history,
+                    //   style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    // ),
                   ),
                 ],
               ),

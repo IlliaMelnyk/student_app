@@ -68,12 +68,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
+      body: SingleChildScrollView(
         child: Column(
           children: [
-            Expanded(
-              flex: 3,
-              child: Center(
+            SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 48.0,
+                  horizontal: 24.0,
+                ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -104,208 +108,138 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
 
-            Expanded(
-              flex: 6,
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.only(
-                  top: 24,
-                  left: 24,
-                  right: 24,
-                  bottom: 16,
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.only(
+                top: 24,
+                left: 24,
+                right: 24,
+                bottom: MediaQuery.of(context).padding.bottom + 24,
+              ),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(32),
+                  topRight: Radius.circular(32),
                 ),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(32),
-                    topRight: Radius.circular(32),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back_ios, size: 20),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                      Text(
+                        l10n.loginTitle,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textOnWhite,
+                        ),
+                      ),
+                      const SizedBox(width: 48),
+                    ],
                   ),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.arrow_back_ios, size: 20),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                        Text(
-                          l10n.loginTitle,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textOnWhite,
-                          ),
-                        ),
-                        const SizedBox(width: 48),
-                      ],
+                  const SizedBox(height: 32),
+
+                  if (viewModel.errorMessage != null) ...[
+                    Text(
+                      viewModel.errorMessage!,
+                      style: const TextStyle(color: Colors.red, fontSize: 14),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 16),
+                  ],
 
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.only(bottom: 24),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (viewModel.errorMessage != null) ...[
-                              Text(
-                                viewModel.errorMessage!,
-                                style: const TextStyle(
-                                  color: Colors.red,
-                                  fontSize: 14,
+                  TextField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: _buildInputDecoration(
+                      labelText: l10n.email,
+                      hasError:
+                          viewModel.errorMessage != null &&
+                          _emailController.text.isEmpty,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  TextField(
+                    controller: _passwordController,
+                    obscureText: !viewModel.isPasswordVisible,
+                    decoration: _buildInputDecoration(
+                      labelText: l10n.password,
+                      hasError:
+                          viewModel.errorMessage != null &&
+                          _passwordController.text.isEmpty,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          viewModel.isPasswordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          color: Colors.grey,
+                        ),
+                        onPressed: () => viewModel.togglePasswordVisibility(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 48),
+
+                  Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "${l10n.noAccount} ",
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                          InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const RegistrationFlowScreen(),
                                 ),
-                              ),
-                              const SizedBox(height: 16),
-                            ],
-
-                            TextField(
-                              controller: _emailController,
-                              keyboardType: TextInputType.emailAddress,
-                              decoration: _buildInputDecoration(
-                                labelText: l10n.email,
-                                hasError:
-                                    viewModel.errorMessage != null &&
-                                    _emailController.text.isEmpty,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-
-                            TextField(
-                              controller: _passwordController,
-                              obscureText: !viewModel.isPasswordVisible,
-                              decoration: _buildInputDecoration(
-                                labelText: l10n.password,
-                                hasError:
-                                    viewModel.errorMessage != null &&
-                                    _passwordController.text.isEmpty,
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    viewModel.isPasswordVisible
-                                        ? Icons.visibility
-                                        : Icons.visibility_off,
-                                    color: Colors.grey,
-                                  ),
-                                  onPressed: () =>
-                                      viewModel.togglePasswordVisibility(),
-                                ),
-                              ),
-                            ),
-
-                            // ZAKOMENTOVANÉ ZAPOMENUTÉ HESLO
-                            /*
-                            const SizedBox(height: 8),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton(
-                                onPressed: () {
-                                  print("Forgot password tapped");
-                                },
-                                child: Text(
-                                  l10n.forgotPassword,
-                                  style: const TextStyle(
-                                    color: AppColors.primary,
-                                  ),
-                                ),
+                              );
+                            },
+                            child: Text(
+                              l10n.register,
+                              style: const TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                            */
-                            const SizedBox(height: 48),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
 
-                            Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      "${l10n.noAccount} ",
-                                      style: const TextStyle(
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                    InkWell(
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const RegistrationFlowScreen(),
-                                          ),
-                                        );
-                                      },
-                                      child: Text(
-                                        l10n.register,
-                                        style: const TextStyle(
-                                          color: AppColors.primary,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 54,
+                        child: ElevatedButton(
+                          onPressed: viewModel.state == AuthState.loading
+                              ? null
+                              : () async {
+                                  final email = _emailController.text.trim();
+                                  final password = _passwordController.text
+                                      .trim();
 
-                                SizedBox(
-                                  width: double.infinity,
-                                  height: 54,
-                                  child: ElevatedButton(
-                                    onPressed:
-                                        viewModel.state == AuthState.loading
-                                        ? null
-                                        : () async {
-                                            final email = _emailController.text
-                                                .trim();
-                                            final password = _passwordController
-                                                .text
-                                                .trim();
+                                  FocusScope.of(context).unfocus();
 
-                                            FocusScope.of(context).unfocus();
+                                  final success = await viewModel.login(
+                                    email: email,
+                                    password: password,
+                                    emptyFieldsText:
+                                        l10n.loginGeneralErrorMessage,
+                                    serverErrorText: l10n.communicationError,
+                                  );
 
-                                            final success = await viewModel
-                                                .login(
-                                                  email: email,
-                                                  password: password,
-                                                  emptyFieldsText: l10n
-                                                      .loginGeneralErrorMessage,
-                                                  serverErrorText:
-                                                      l10n.communicationError,
-                                                );
-
-                                            if (success && mounted) {
-                                              Navigator.pushReplacement(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      const MainScreen(),
-                                                ),
-                                              );
-                                            }
-                                          },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.primary,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(24),
-                                      ),
-                                    ),
-                                    child: viewModel.state == AuthState.loading
-                                        ? const CircularProgressIndicator(
-                                            color: Colors.white,
-                                          )
-                                        : Text(
-                                            l10n.continueButton,
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-
-                                TextButton(
-                                  onPressed: () {
+                                  if (success && mounted) {
                                     Navigator.pushReplacement(
                                       context,
                                       MaterialPageRoute(
@@ -313,24 +247,51 @@ class _LoginScreenState extends State<LoginScreen> {
                                             const MainScreen(),
                                       ),
                                     );
-                                  },
-                                  child: Text(
-                                    l10n.continueAsGuest,
-                                    style: TextStyle(
-                                      color: Colors.grey.shade600,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                    ),
+                                  }
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                          ),
+                          child: viewModel.state == AuthState.loading
+                              ? const CircularProgressIndicator(
+                                  color: Colors.white,
+                                )
+                              : Text(
+                                  l10n.continueButton,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                              ],
-                            ),
-                          ],
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                      const SizedBox(height: 16),
+
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const MainScreen(),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          l10n.continueAsGuest,
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
