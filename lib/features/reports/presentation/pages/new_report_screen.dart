@@ -51,7 +51,7 @@ class _NewReportScreenState extends State<NewReportScreen> {
         backgroundColor: AppColors.white,
         elevation: 0,
         centerTitle: true,
-        leadingWidth: 80,
+        leadingWidth: 100,
         leading: InkWell(
           onTap: () => Navigator.of(context).pop(),
           child: Row(
